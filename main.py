@@ -283,14 +283,33 @@ async def apply_name(message: Message, state: FSMContext):
 async def apply_age(message: Message, state: FSMContext):
     await state.update_data(age=message.text.strip())
     await state.set_state(Apply.experience)
-    await message.answer("Treyding tajribangiz? (0 / beginner / intermediate)", reply_markup=cancel_kb())
-
+    
 @dp.message(Apply.experience)
 async def apply_experience(message: Message, state: FSMContext):
     await state.update_data(experience=message.text.strip())
     await state.set_state(Apply.deposit)
     await message.answer("Depozit miqdori (taxminan)?", reply_markup=cancel_kb())
+kb = InlineKeyboardBuilder()
+kb.button(text="🟢 Yangi", callback_data="exp_new")
+kb.button(text="🟡 O‘rtacha", callback_data="exp_mid")
+kb.button(text="🔴 Professional", callback_data="exp_pro")
+kb.adjust(1)
 
+await message.answer(
+    "📊 Treyding darajangizni tanlang:",
+    reply_markup=kb.as_markup()
+)
+@dp.callback_query(lambda c: c.data.startswith("exp_"))
+async def set_experience(call: CallbackQuery, state: FSMContext):
+    mapping = {
+        "exp_new": "Yangi",
+        "exp_mid": "O‘rtacha",
+        "exp_pro": "Professional",
+    }
+    await state.update_data(experience=mapping[call.data])
+    await state.set_state(Apply.deposit)
+    await call.message.answer("💰 Depozit miqdorini yozing:")
+    await call.answer()
 @dp.message(Apply.deposit)
 async def apply_deposit(message: Message, state: FSMContext):
     await state.update_data(deposit=message.text.strip())
@@ -318,7 +337,32 @@ async def apply_mode(message: Message, state: FSMContext):
     await message.answer("Aloqa uchun Telegram yoki telefon raqam", reply_markup=cancel_kb())
 
 @dp.message(Apply.contact)
+import re
+
+@dp.message(Apply.contact)
 async def apply_contact(message: Message, state: FSMContext):
+    phone = message.text.strip()
+
+    if not re.fullmatch(r"\+998\d{9}", phone):
+        await message.answer(
+            "❌ Telefon raqam noto‘g‘ri formatda.\n\n"
+            "To‘g‘ri format:\n"
+            "+998123456789"
+        )
+        return
+
+    await state.update_data(contact=phone)
+    data = await state.get_data()
+
+    await message.answer(
+        "✅ Ariza qabul qilindi!\n\n"
+        f"👤 Ism: {data['name']}\n"
+        f"🎂 Yosh: {data['age']}\n"
+        f"📊 Daraja: {data['experience']}\n"
+        f"💰 Depozit: {data['deposit']}\n"
+        f"📞 Aloqa: {data['contact']}"
+    )
+    await state.clear()
     data = await state.get_data()
     summary = (
         "📝 *Yangi ariza*\n\n"
