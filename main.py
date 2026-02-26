@@ -20,7 +20,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME", "@GreatNews_academy")
 SUPPORT_USERNAME = os.getenv("SUPPORT_USERNAME", "@akrom_GN")
 OFFICE_MAP_URL = os.getenv("OFFICE_MAP_URL", "https://maps.app.goo.gl/L5PAc4TSfgpcAveA7")
-ADMIN_IDS = set(int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip())
+ADMIN_IDS = set()
 
 DB_PATH = "greatnews.db"
 
